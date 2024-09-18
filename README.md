@@ -6,7 +6,7 @@ In the procedure below we assume that boths NFS server and NFS client are runnin
 
 ```console
 apt update
-apt install nfs-kernel-server
+apt install nfs-kernel-server -y
 ```
 
 ## Create and configure directory to share
