@@ -44,7 +44,9 @@ mount 127.0.0.1:/srv/nfs_share /mnt/nfs_share
 echo "127.0.0.1:/srv/nfs_share /mnt/nfs_share nfs defaults 0 0" | tee -a /etc/fstab
 ```
 
-#Create a PV defining the exported NFS share
+## Create a PV on the exported NFS share
+
+```console
 echo | kubectl apply -f - << EOF
 apiVersion: v1
 kind: PersistentVolume
@@ -65,8 +67,11 @@ spec:
       path: /mnt/nfs_share
       server: 127.0.0.1
 EOF
+```
 
-#Create PVC
+## Create the NFS PVC
+
+```console
 echo | kubectl apply -f - << EOF
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -81,8 +86,11 @@ spec:
       requests:
          storage: 10Gi
 EOF
+```
+## Create the NFS location profile for Veeam Kasten
 
-
+```console
+echo | kubectl apply -f - << EOF
 kind: Profile
 apiVersion: config.kio.kasten.io/v1alpha1
 metadata:
@@ -93,7 +101,7 @@ spec:
     type: FileStore
     fileStore:
       claimName: nfs-pvc
-      path: /
+      path: /srv/nfs_share
     credential:
       secretType: ""
       secret:
@@ -102,4 +110,6 @@ spec:
         name: ""
         namespace: ""
   type: Location
+EOF
+```
 
