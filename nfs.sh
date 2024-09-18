@@ -1,8 +1,6 @@
-# ksten-nfs
-## Install NFS server
-
-`apt update
-apt install nfs-kernel-server`
+#Install NFS
+apt update
+apt install nfs-kernel-server
 
 #Create and configure directory to share
 mkdir -p /srv/nfs_share
