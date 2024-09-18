@@ -1,4 +1,4 @@
-# Setup NFS to create an NFS export locatin for Veeam Kasten
+# Setup NFS to create an NFS export location for Veeam Kasten
 
 In the procedure below we assume that boths NFS server and NFS client will run running on the same server.
 
