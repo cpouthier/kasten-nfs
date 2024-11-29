@@ -2,36 +2,51 @@
 
 ## Install NFS server
 
-
-apt update
-apt install nfs-kernel-server -y
-
+sudo apt-get update
+sudo apt-get install nfs-common nfs-kernel-server -y
 
 ## Create and configure directory to share
 
+sudo mkdir -p /data/nfs
+sudo chown nobody:nogroup /data/nfs
+sudo chmod 2770 /data/nfs
 
-mkdir -p /srv/nfs_share
-chown nobody:nogroup /srv/nfs_share
-chmod 755 /srv/nfs_share
+## Configure exports !CHANGE IP!
 
+echo -e "/data/nfs\t37.187.77.198/24(rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
+sudo exportfs -av
 
-## Configure exports
+## Restart services
 
+sudo systemctl restart nfs-kernel-server
+sudo systemctl status nfs-kernel-server
 
-echo "/srv/nfs_share    127.0.0.1/24(rw,sync,no_subtree_check)" | tee -a /etc/exports
+## Show export details !CHANGE IP!
 
-
-## Apply modification and restart service
-
-
-exportfs -a
-systemctl restart nfs-kernel-server
-
+/sbin/showmount -e 37.187.77.198
 
 ## Mount share on client
 
+sudo apt update
+sudo apt install nfs-common -y
 
-apt install nfs-common
+# Install NFS provisioner 
+
+helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
+
+## !CHANGE IP!
+
+helm install nfs-subdir-external-provisioner \
+nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
+--set nfs.server=37.187.77.198 \
+--set nfs.path=/data/nfs \
+--set storageClass.onDelete=true
+
+#Check Pods and storage Class
+
+kubectl get pod
+kubectl get sc
+
 mkdir -p /mnt/nfs_share
 mount 127.0.0.1:/srv/nfs_share /mnt/nfs_share
 
@@ -40,6 +55,19 @@ mount 127.0.0.1:/srv/nfs_share /mnt/nfs_share
 
 
 echo "127.0.0.1:/srv/nfs_share /mnt/nfs_share nfs defaults 0 0" | tee -a /etc/fstab
+
+
+## Add Helm repo for nfs-subdir-external-provisioner
+helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
+
+##Install NFS Provisionner
+helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
+kubectl create namespace nfs-storage
+helm upgrade --install -n nfs-storage --create-namespace nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
+    --set nfs.server=37.187.77.198 \
+    --set nfs.path=/data/nfs \
+    --set storageClass.name=nfs \
+    --set storageClass.archiveOnDelete=false
 
 
 ## Create a PV on the exported NFS share
@@ -62,8 +90,8 @@ spec:
       - hard
       - nfsvers=4.1
    nfs:
-      path: /mnt/nfs_share
-      server: 127.0.0.1
+      path: /data/nfs
+      server: 37.187.77.198
 EOF
 
 
@@ -92,14 +120,14 @@ echo | kubectl apply -f - << EOF
 kind: Profile
 apiVersion: config.kio.kasten.io/v1alpha1
 metadata:
-  name: nfs-share
+  name: nfs
   namespace: kasten-io
 spec:
   locationSpec:
     type: FileStore
     fileStore:
       claimName: nfs-pvc
-      path: /srv/nfs_share
+      path: /
     credential:
       secretType: ""
       secret:
@@ -109,5 +137,13 @@ spec:
         namespace: ""
   type: Location
 EOF
+
+
+
+créer un pod qui monte le pvc NFS et voir si je peux écrire et naviguer dedans qui va rester pending en container created.
+
+--> 
+
+
 
 
