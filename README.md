@@ -146,3 +146,63 @@ spec:
 EOF
 ```
 
+## Troubleshooting
+
+If you want to ensure you can access your NFS storage and write in the exported share, you can check by starting a pod which will mount the nfs-pvc:
+
+```console
+echo | kubectl apply -f - << EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: basic-app
+  namespace: kasten-io
+  labels:
+    app: basic-app
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: basic-app
+  template:
+    metadata:
+      labels:
+        app: basic-app
+    spec:
+      containers:
+      - name: basic-app-container   
+        image: docker.io/alpine:latest
+        resources:
+            requests:
+              memory: 256Mi
+              cpu: 100m
+        command: ["tail"]
+        args: ["-f", "/dev/null"]         
+        volumeMounts:
+        - name: data
+          mountPath: /data        
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: nfs-pvc
+EOF
+```
+
+Then connect to it and navigate to /data, create and delete a file there:
+
+```console
+pod=$(kubectl get po -n kasten-io |grep basic-app | awk '{print $1}' )
+kubectl exec -n kasten-io -it $pod prhb -- sh
+```
+
+Type "exit" to exit the pod and do the cleanup:
+
+```console
+pod=$(kubectl get po -n kasten-io |grep basic-app | awk '{print $1}' )
+kubectl delete po $pod -n kasten-io
+```
+
+
+
