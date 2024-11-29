@@ -39,8 +39,10 @@ sudo systemctl status nfs-kernel-server
 
 ## Check your export details
 
+Do not forget to change IP by the NFS server one below:
+
 ```console
-/sbin/showmount -e 37.187.77.198
+/sbin/showmount -e 10.10.10.10
 ```
 
 ## Install NFS client packages on K8s nodes
