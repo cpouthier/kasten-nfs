@@ -13,7 +13,7 @@ sudo apt-get update
 sudo apt-get install nfs-common nfs-kernel-server -y
 ```
 
-## Create and configure directory to share
+### Create and configure directory to share
 
 ```console
 sudo mkdir -p /data/nfs
@@ -21,7 +21,7 @@ sudo chown nobody:nogroup /data/nfs
 sudo chmod 2770 /data/nfs
 ```
 
-## Configure exports
+### Configure exports
 
 Be sure to change the IP below:
 
@@ -29,7 +29,13 @@ Be sure to change the IP below:
 echo -e "/data/nfs\t10.10.10.10/24(rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
 ```
 
-## Apply modification and restart service
+And automate mount:
+
+```console
+echo "10.10.10.10:/srv/nfs_share /mnt/nfs_share nfs defaults 0 0" | tee -a /etc/fstab
+```
+
+### Apply modification and restart service
 
 ```console
 sudo exportfs -av
@@ -37,7 +43,7 @@ sudo systemctl restart nfs-kernel-server
 sudo systemctl status nfs-kernel-server
 ```
 
-## Check your export details
+### Check your export details
 
 Do not forget to change IP by the NFS server one below:
 
@@ -54,7 +60,7 @@ sudo apt update
 sudo apt install nfs-common -y
 ```
 
-## Install NFS provisioner
+### Install NFS provisioner
 
 Do not forget to change IP by the NFS server one below:
 
@@ -68,7 +74,7 @@ helm upgrade --install -n nfs-storage --create-namespace nfs-subdir-external-pro
     --set storageClass.archiveOnDelete=false
 ```
 
-## Create a PV on the exported NFS share
+### Create a PV on the exported NFS share
 
 Do not forget to change IP by the NFS server one below:
 
@@ -95,7 +101,7 @@ spec:
 EOF
 ```
 
-## Create the NFS PVC
+### Create the NFS PVC
 
 ```console
 echo | kubectl apply -f - << EOF
@@ -114,7 +120,7 @@ spec:
 EOF
 ```
 
-## Create the NFS location profile for Veeam Kasten
+### Create the NFS location profile for Veeam Kasten
 
 ```console
 echo | kubectl apply -f - << EOF
